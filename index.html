@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Artículos de Electricidad</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            padding: 10px 0;
+            text-align: center;
+        }
+
+        .categorias, .productos, .carrito {
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .producto {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        .carrito {
+            position: fixed;
+            right: 20px;
+            top: 100px;
+            width: 300px;
+        }
+
+        /* Estilos responsivos */
+        @media (max-width: 768px) {
+            .carrito {
+                position: static;
+                width: auto;
+                margin-top: 20px;
+            }
+
+            .productos {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .producto {
+                text-align: center;
+            }
+
+            button {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .categorias {
+                text-align: center;
+            }
+
+            #categoria {
+                width: 100%;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.5rem;
+            }
+
+            .carrito h2 {
+                font-size: 1.2rem;
+            }
+
+            .producto h3 {
+                font-size: 1rem;
+            }
+
+            .producto p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Estructura HTML -->
+    <header>
+        <h1>Tienda de Artículos de Electricidad</h1>
+    </header>
+
+    <section class="categorias">
+        <label for="categoria">Selecciona una categoría:</label>
+        <select id="categoria">
+            <option value="cables">Cables</option>
+            <option value="interruptores">Interruptores</option>
+            <option value="bombillas">Bombillas</option>
+        </select>
+    </section>
+
+    <section class="productos">
+        <div class="producto" data-categoria="cables" data-nombre="Cable de Cobre 2.5mm" data-precio="10.00">
+            <h3>Cable de Cobre 2.5mm</h3>
+            <p>Precio: $10.00</p>
+            <button onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto" data-categoria="interruptores" data-nombre="Interruptor Simple" data-precio="5.00">
+            <h3>Interruptor Simple</h3>
+            <p>Precio: $5.00</p>
+            <button onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto" data-categoria="bombillas" data-nombre="Bombilla LED 10W" data-precio="8.00">
+            <h3>Bombilla LED 10W</h3>
+            <p>Precio: $8.00</p>
+            <button onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+    </section>
+
+    <section class="carrito">
+        <h2>Carrito de Compras</h2>
+        <ul id="lista-carrito"></ul>
+        <p>Total: $<span id="total">0.00</span></p>
+        <button onclick="generarPDF()">Generar PDF</button>
+    </section>
+
+    <script>
+        // JavaScript
+        let carrito = [];
+        let total = 0;
+
+        function agregarAlCarrito(boton) {
+            const producto = boton.parentElement;
+            const nombre = producto.getAttribute('data-nombre');
+            const precio = parseFloat(producto.getAttribute('data-precio'));
+
+            carrito.push({ nombre, precio });
+            total += precio;
+
+            actualizarCarrito();
+        }
+
+        function actualizarCarrito() {
+            const listaCarrito = document.getElementById('lista-carrito');
+            const totalElement = document.getElementById('total');
+
+            listaCarrito.innerHTML = '';
+            carrito.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.nombre} - $${item.precio.toFixed(2)}`;
+                listaCarrito.appendChild(li);
+            });
+
+            totalElement.textContent = total.toFixed(2);
+        }
+
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.text("Factura de Compra", 10, 10);
+            let y = 20;
+            carrito.forEach(item => {
+                doc.text(`${item.nombre} - $${item.precio.toFixed(2)}`, 10, y);
+                y += 10;
+            });
+            doc.text(`Total: $${total.toFixed(2)}`, 10, y);
+
+            doc.save("factura.pdf");
+        }
+    </script>
+
+    <!-- Incluir la librería jsPDF desde un CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
