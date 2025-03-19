@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Artículos de Electricidad</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* Estilos para el header */
+        header {
+            background-image: url('electroface.jpeg'); /* Ruta de la imagen del logo */
+            background-size: cover; /* Cubre todo el header */
+            background-position: center; /* Centra la imagen */
+            height: 200px; /* Altura del header */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff; /* Color del texto */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra para el texto */
+        }
+
+        header h1 {
+            font-size: 3rem; /* Tamaño del texto */
+            margin: 0;
+        }
+
+        /* Resto de estilos */
+        .categorias, .productos, .carrito {
+            margin: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .producto {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        button {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        /* Estilos para el carrito */
+        .carrito {
+            position: fixed;
+            right: 20px;
+            top: 240px; /* Ajuste para no solapar con el header */
+            width: 300px;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            border: 1px solid #34495e;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .carrito h2 {
+            margin-top: 0;
+            color: #ecf0f1;
+        }
+
+        .carrito ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .carrito ul li {
+            padding: 5px 0;
+            border-bottom: 1px solid #34495e;
+        }
+
+        .carrito p {
+            font-weight: bold;
+            color: #ecf0f1;
+        }
+
+        .carrito button {
+            background-color: #3498db;
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .carrito button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Estilos responsivos */
+        @media (max-width: 768px) {
+            .carrito {
+                position: static;
+                width: auto;
+                margin-top: 20px;
+            }
+
+            .productos {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .producto {
+                text-align: center;
+            }
+
+            button {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .categorias {
+                text-align: center;
+            }
+
+            #categoria {
+                width: 100%;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 2rem; /* Tamaño más pequeño para móviles */
+            }
+
+            .carrito h2 {
+                font-size: 1.2rem;
+            }
+
+            .producto h3 {
+                font-size: 1rem;
+            }
+
+            .producto p {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Estructura HTML -->
+    <header>
+        <h1>Bienvenidos a ElectroFace</h1>
+    </header>
+
+    <section class="categorias">
+        <label for="categoria">Selecciona una categoría:</label>
+        <select id="categoria">
+            <option value="todos">Todos</option>
+            <option value="cables">Cables</option>
+            <option value="interruptores">Interruptores</option>
+            <option value="bombillas">Bombillas</option>
+        </select>
+    </section>
+
+    <section class="productos">
+        <div class="producto" data-categoria="cables" data-nombre="Cable de Cobre 2.5mm" data-precio="10.00">
+            <h3>Cable de Cobre 2.5mm</h3>
+            <p>Precio: $10.00</p>
+            <button onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto" data-categoria="interruptores" data-nombre="Interruptor Simple" data-precio="5.00">
+            <h3>Interruptor Simple</h3>
+            <p>Precio: $5.00</p>
+            <button onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+        <div class="producto" data-categoria="bombillas" data-nombre="Bombilla LED 10W" data-precio="8.00">
+            <h3>Bombilla LED 10W</h3>
+            <p>Precio: $8.00</p>
+            <button onclick="agregarAlCarrito(this)">Agregar al carrito</button>
+        </div>
+    </section>
+
+    <section class="carrito">
+        <h2>Carrito de Compras</h2>
+        <ul id="lista-carrito"></ul>
+        <p>Total: $<span id="total">0.00</span></p>
+        <button onclick="generarPDF()">Generar PDF</button>
+    </section>
+
+    <script>
+        // JavaScript
+        let carrito = [];
+        let total = 0;
+
+        // Función para filtrar productos por categoría
+        function filtrarProductos() {
+            const categoriaSeleccionada = document.getElementById('categoria').value;
+            const productos = document.querySelectorAll('.producto');
+
+            productos.forEach(producto => {
+                const categoriaProducto = producto.getAttribute('data-categoria');
+                if (categoriaSeleccionada === "todos" || categoriaProducto === categoriaSeleccionada) {
+                    producto.style.display = "block";
+                } else {
+                    producto.style.display = "none";
+                }
+            });
+        }
+
+        // Evento para filtrar productos cuando se cambia la categoría
+        document.getElementById('categoria').addEventListener('change', filtrarProductos);
+
+        // Función para agregar productos al carrito
+        function agregarAlCarrito(boton) {
+            const producto = boton.parentElement;
+            const nombre = producto.getAttribute('data-nombre');
+            const precio = parseFloat(producto.getAttribute('data-precio'));
+
+            carrito.push({ nombre, precio });
+            total += precio;
+
+            actualizarCarrito();
+        }
+
+        // Función para actualizar el carrito
+        function actualizarCarrito() {
+            const listaCarrito = document.getElementById('lista-carrito');
+            const totalElement = document.getElementById('total');
+
+            listaCarrito.innerHTML = '';
+            carrito.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.nombre} - $${item.precio.toFixed(2)}`;
+                listaCarrito.appendChild(li);
+            });
+
+            totalElement.textContent = total.toFixed(2);
+        }
+
+        // Función para generar el PDF
+        function generarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.text("Factura de Compra", 10, 10);
+            let y = 20;
+            carrito.forEach(item => {
+                doc.text(`${item.nombre} - $${item.precio.toFixed(2)}`, 10, y);
+                y += 10;
+            });
+            doc.text(`Total: $${total.toFixed(2)}`, 10, y);
+
+            doc.save("factura.pdf");
+        }
+
+        // Filtrar productos al cargar la página
+        filtrarProductos();
+    </script>
+
+    <!-- Incluir la librería jsPDF desde un CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+</html>
