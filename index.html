@@ -3,587 +3,617 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aventura de Montaña Realista</title>
+    <title>Pac-Man Móvil</title>
     <style>
-        body { 
-            margin: 0; 
-            overflow: hidden; 
-            font-family: Arial, sans-serif;
-            touch-action: none;
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
             background-color: #000;
-        }
-        #container { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-        }
-        #hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: white;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            z-index: 10;
-        }
-        #mission-info {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            color: white;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 200px;
-            font-size: 14px;
-        }
-        #controls {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            margin: 0 auto;
-            width: 300px;
-            color: white;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 10px;
-            text-align: center;
-            z-index: 5;
-        }
-        #joystick-left {
-            position: absolute;
-            bottom: 100px;
-            left: 50px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            z-index: 5;
-        }
-        #joystick-right {
-            position: absolute;
-            bottom: 100px;
-            right: 50px;
-            width: 80px;
-            height: 80px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            z-index: 5;
-        }
-        .joystick-handle {
-            width: 40px;
-            height: 40px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            position: absolute;
-            top: 20px;
-            left: 20px;
             touch-action: none;
+            font-family: Arial, sans-serif;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #game-canvas {
+            display: block;
+            background-color: #000;
         }
         #start-screen {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            z-index: 100;
-            text-align: center;
-        }
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            margin: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 18px;
-        }
-        button:active {
-            background: #45a049;
-        }
-        .orientation-message {
-            display: none;
-            position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            color: white;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            flex-direction: column;
-            z-index: 200;
-            font-size: 1.5em;
-            text-align: center;
-        }
-        #health-bar {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            width: 150px;
-            height: 20px;
-            background: rgba(255, 0, 0, 0.5);
-            border-radius: 10px;
-            overflow: hidden;
+            color: #FF0;
             z-index: 10;
         }
-        #health-fill {
-            height: 100%;
+        #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            background: linear-gradient(to right, #ff0000, #00ff00);
-            transition: width 0.3s;
-        }
-        #inventory {
-            position: absolute;
-            bottom: 50px;
-            right: 20px;
-            display: flex;
-            gap: 5px;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #F00;
             z-index: 10;
         }
-        .inventory-item {
+        #game-ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #FFF;
+            font-size: 18px;
+            z-index: 5;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #FF0;
+        }
+        button {
+            background-color: #FF0;
+            color: #000;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        #joystick {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            z-index: 5;
+        }
+        #joystick-handle {
+            position: absolute;
+            top: 40px;
+            left: 40px;
             width: 40px;
             height: 40px;
-            background: rgba(0, 0, 0, 0.7);
-            border: 1px solid #555;
-            border-radius: 5px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 20px;
-        }
-        .active-item {
-            border: 2px solid #4CAF50;
-            box-shadow: 0 0 10px #4CAF50;
+            background-color: rgba(255, 255, 0, 0.5);
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
-    <div class="orientation-message" id="orientation-message">
-        <h2>Por favor gira tu dispositivo</h2>
-        <p>Para una mejor experiencia, usa el simulador en modo horizontal</p>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        
+        <div id="game-ui">
+            Puntos: <span id="score">0</span> | Vidas: <span id="lives">3</span>
+        </div>
+        
+        <div id="joystick">
+            <div id="joystick-handle"></div>
+        </div>
+        
+        <div id="start-screen">
+            <h1>PAC-MAN MÓVIL</h1>
+            <button id="start-btn">JUGAR</button>
+        </div>
+        
+        <div id="game-over-screen">
+            <h1>GAME OVER</h1>
+            <p>Puntuación: <span id="final-score">0</span></p>
+            <button id="restart-btn">JUGAR DE NUEVO</button>
+        </div>
     </div>
 
-    <div id="container"></div>
-    
-    <div id="hud">
-        <div>Hora: <span id="time">08:00</span></div>
-        <div>Temperatura: <span id="temp">15°C</span></div>
-        <div>Altitud: <span id="altitude">1,200</span> m</div>
-    </div>
-    
-    <div id="mission-info">
-        <h3>Misión:</h3>
-        <p>Llega a la cima de la montaña</p>
-        <p>Distancia: <span id="distance">850</span> m</p>
-    </div>
-    
-    <div id="health-bar">
-        <div id="health-fill"></div>
-    </div>
-    
-    <div id="inventory">
-        <div class="inventory-item active-item">🧗</div>
-        <div class="inventory-item">🔦</div>
-        <div class="inventory-item">🧊</div>
-        <div class="inventory-item">🍎</div>
-    </div>
-    
-    <!-- Controles táctiles -->
-    <div id="joystick-left">
-        <div class="joystick-handle" id="left-joystick-handle"></div>
-    </div>
-    <div id="joystick-right">
-        <div class="joystick-handle" id="right-joystick-handle"></div>
-    </div>
-    
-    <div id="start-screen">
-        <h1>Aventura de Montaña Realista</h1>
-        <p>Explora paisajes montañosos realistas y completa misiones desafiantes</p>
-        <button id="start-btn">Comenzar Aventura</button>
-    </div>
-
-    <!-- Añadir primero SimplexNoise -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.min.js"></script>
-    
     <script>
-        // Variables principales
-        let scene, camera, renderer, player;
-        let clock = new THREE.Clock();
-        let terrain, sky, sun;
-        let joystickLeftActive = false, joystickRightActive = false;
-        let joystickLeftPos = { x: 0, y: 0 }, joystickRightPos = { x: 0, y: 0 };
-        let playerStats = {
-            health: 100,
-            stamina: 100,
-            temperature: 15,
-            altitude: 1200,
-            time: 8,
-            inventory: ['pickaxe', 'flashlight', 'water', 'food'],
-            currentItem: 0
+        // Configuración del juego
+        const config = {
+            tileSize: 20,
+            pacmanSpeed: 3,
+            ghostSpeed: 2,
+            dotSize: 4,
+            powerPelletSize: 8,
+            scaredTime: 10000 // 10 segundos
         };
-        
-        // Verificar orientación
-        function checkOrientation() {
-            const orientationMessage = document.getElementById('orientation-message');
-            const isPortrait = window.innerHeight > window.innerWidth;
-            
-            if (isPortrait) {
-                orientationMessage.style.display = 'flex';
-            } else {
-                orientationMessage.style.display = 'none';
-            }
+
+        // Elementos del DOM
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const livesElement = document.getElementById('lives');
+        const finalScoreElement = document.getElementById('final-score');
+        const startScreen = document.getElementById('start-screen');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const joystick = document.getElementById('joystick');
+        const joystickHandle = document.getElementById('joystick-handle');
+
+        // Estado del juego
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameRunning = false;
+        let joystickActive = false;
+        let joystickDirection = { x: 0, y: 0 };
+        let joystickStartPos = { x: 0, y: 0 };
+
+        // Tamaño del canvas
+        function resizeCanvas() {
+            const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            canvas.width = size;
+            canvas.height = size;
         }
-        
-        // Inicialización
-        function init() {
-            // Verificar orientación
-            checkOrientation();
-            window.addEventListener('resize', checkOrientation);
-            window.addEventListener('orientationchange', checkOrientation);
+
+        // Laberinto (1 = pared, 0 = camino, 2 = punto, 3 = power pellet)
+        const maze = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1],
+            [1,2,1,1,1,2,1,1,2,1,1,2,1,1,2,1,1,1,2,1],
+            [1,3,1,1,1,2,1,1,2,1,1,2,1,1,2,1,1,1,3,1],
+            [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+            [1,2,1,1,1,2,1,2,1,1,1,1,2,1,2,1,1,1,2,1],
+            [1,2,2,2,2,2,1,2,2,1,1,2,2,1,2,2,2,2,2,1],
+            [1,1,1,1,1,2,1,1,2,1,1,2,1,1,2,1,1,1,1,1],
+            [0,0,0,0,1,2,1,2,2,2,2,2,2,1,2,1,0,0,0,0],
+            [1,1,1,1,1,2,1,2,1,1,1,1,2,1,2,1,1,1,1,1],
+            [2,2,2,2,2,2,2,2,1,0,0,1,2,2,2,2,2,2,2,2],
+            [1,1,1,1,1,2,1,2,1,1,1,1,2,1,2,1,1,1,1,1],
+            [0,0,0,0,1,2,1,2,2,2,2,2,2,1,2,1,0,0,0,0],
+            [1,1,1,1,1,2,1,2,1,1,1,1,2,1,2,1,1,1,1,1],
+            [1,2,2,2,2,2,2,2,2,1,1,2,2,2,2,2,2,2,2,1],
+            [1,2,1,1,1,2,1,1,2,1,1,2,1,1,2,1,1,1,2,1],
+            [1,3,2,2,1,2,2,2,2,2,2,2,2,2,2,1,2,2,3,1],
+            [1,1,1,2,1,2,1,2,1,1,1,1,2,1,2,1,2,1,1,1],
+            [1,2,2,2,2,2,1,2,2,1,1,2,2,1,2,2,2,2,2,1],
+            [1,2,1,1,1,1,1,1,2,1,1,2,1,1,1,1,1,1,2,1],
+            [1,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
+
+        // Personajes
+        const pacman = {
+            x: 10,
+            y: 15,
+            radius: config.tileSize / 2 - 2,
+            speed: config.pacmanSpeed,
+            direction: { x: 0, y: 0 },
+            nextDirection: { x: 0, y: 0 },
+            mouthAngle: 0,
+            mouthOpen: true,
+            mouthSpeed: 0.1
+        };
+
+        const ghosts = [
+            { x: 9, y: 9, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#F00', direction: { x: 1, y: 0 }, scared: false },
+            { x: 10, y: 9, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#0FF', direction: { x: -1, y: 0 }, scared: false },
+            { x: 9, y: 10, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#FF0', direction: { x: 0, y: 1 }, scared: false },
+            { x: 10, y: 10, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#F0F', direction: { x: 0, y: -1 }, scared: false }
+        ];
+
+        // Puntos y power pellets
+        let dots = [];
+        let powerPellets = [];
+
+        function initLevel() {
+            dots = [];
+            powerPellets = [];
             
-            // Crear escena
-            scene = new THREE.Scene();
-            scene.fog = new THREE.FogExp2(0x87CEEB, 0.0005);
-            
-            // Configurar cámara
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-            camera.position.set(0, 1.8, 5);
-            
-            // Configurar renderizador
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.physicallyCorrectLights = true;
-            document.getElementById('container').appendChild(renderer.domElement);
-            
-            // Añadir luces
-            addLights();
-            
-            // Crear entorno
-            createEnvironment();
-            
-            // Crear jugador
-            createPlayer();
-            
-            // Configurar controles
-            setupControls();
-            
-            // Mostrar pantalla inicial
-            document.getElementById('start-screen').style.display = 'flex';
-            
-            // Iniciar ciclo del día/noche
-            setInterval(updateTime, 60000);
-        }
-        
-        function addLights() {
-            // Luz ambiental
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            // Luz direccional (sol)
-            sun = new THREE.DirectionalLight(0xffffff, 1);
-            sun.position.set(100, 100, 50);
-            sun.castShadow = true;
-            sun.shadow.mapSize.width = 2048;
-            sun.shadow.mapSize.height = 2048;
-            sun.shadow.camera.near = 0.5;
-            sun.shadow.camera.far = 500;
-            sun.shadow.camera.left = -100;
-            sun.shadow.camera.right = 100;
-            sun.shadow.camera.top = 100;
-            sun.shadow.camera.bottom = -100;
-            scene.add(sun);
-            
-            // Luz de la luna (para noche)
-            const moonLight = new THREE.DirectionalLight(0x7da5ff, 0.1);
-            moonLight.position.set(-100, 100, -50);
-            scene.add(moonLight);
-        }
-        
-        function createEnvironment() {
-            // Crear terreno con geometría procedural
-            const terrainGeometry = new THREE.PlaneGeometry(2000, 2000, 100, 100);
-            const positions = terrainGeometry.attributes.position;
-            
-            // Generar montañas realistas con ruido Simplex
-            const simplex = new SimplexNoise();
-            
-            for (let i = 0; i < positions.count; i++) {
-                const x = positions.getX(i);
-                const y = positions.getY(i);
-                
-                // Altura base con múltiples capas de ruido para mayor realismo
-                let height = 0;
-                height += simplex.noise2D(x * 0.005, y * 0.005) * 50;
-                height += simplex.noise2D(x * 0.01, y * 0.01) * 30;
-                height += simplex.noise2D(x * 0.02, y * 0.02) * 15;
-                height = Math.max(0, height);
-                
-                // Crear un pico principal
-                const distToCenter = Math.sqrt(x*x + y*y);
-                const peakHeight = Math.max(0, 200 - distToCenter * 0.2);
-                height += peakHeight;
-                
-                positions.setZ(i, height);
-            }
-            
-            terrainGeometry.computeVertexNormals();
-            
-            // Material del terreno
-            const terrainMaterial = new THREE.MeshStandardMaterial({ 
-                color: 0x3a5f0b,
-                wireframe: false
-            });
-            
-            terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
-            terrain.rotation.x = -Math.PI / 2;
-            terrain.receiveShadow = true;
-            terrain.castShadow = true;
-            scene.add(terrain);
-            
-            // Añadir objetos al entorno
-            addRocksAndTrees();
-            
-            // Crear cielo
-            createSky();
-        }
-        
-        function addRocksAndTrees() {
-            // Añadir rocas dispersas
-            const rockGeometry = new THREE.DodecahedronGeometry(1, 0);
-            const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x777777 });
-            const simplex = new SimplexNoise();
-            
-            for (let i = 0; i < 100; i++) {
-                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
-                
-                // Posición aleatoria en el terreno
-                const x = Math.random() * 1800 - 900;
-                const y = Math.random() * 1800 - 900;
-                const z = getTerrainHeight(x, y);
-                
-                // Solo colocar rocas en áreas rocosas
-                if (z > 80 && z < 150) {
-                    rock.position.set(x, z, y);
-                    rock.scale.set(
-                        Math.random() * 2 + 0.5,
-                        Math.random() * 2 + 0.5,
-                        Math.random() * 2 + 0.5
-                    );
-                    rock.rotation.set(
-                        Math.random() * Math.PI,
-                        Math.random() * Math.PI,
-                        Math.random() * Math.PI
-                    );
-                    rock.castShadow = true;
-                    scene.add(rock);
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    if (maze[y][x] === 2) {
+                        dots.push({ x: x + 0.5, y: y + 0.5 });
+                    } else if (maze[y][x] === 3) {
+                        powerPellets.push({ x: x + 0.5, y: y + 0.5 });
+                    }
                 }
             }
             
-            // Añadir árboles simplificados
-            const treeGeometry = new THREE.ConeGeometry(1, 3, 8);
-            const treeMaterial = new THREE.MeshStandardMaterial({ color: 0x2d5a27 });
-            const trunkGeometry = new THREE.CylinderGeometry(0.3, 0.4, 1);
-            const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x5a3a22 });
+            // Resetear posiciones
+            pacman.x = 10;
+            pacman.y = 15;
+            pacman.direction = { x: 0, y: 0 };
+            pacman.nextDirection = { x: 0, y: 0 };
             
-            for (let i = 0; i < 50; i++) {
-                const tree = new THREE.Group();
-                
-                // Posición aleatoria en áreas verdes
-                const x = Math.random() * 1800 - 900;
-                const y = Math.random() * 1800 - 900;
-                const z = getTerrainHeight(x, y);
-                
-                if (z > 50 && z < 100) {
-                    const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
-                    trunk.position.y = 0.5;
-                    trunk.castShadow = true;
-                    tree.add(trunk);
-                    
-                    const leaves = new THREE.Mesh(treeGeometry, treeMaterial);
-                    leaves.position.y = 2.5;
-                    leaves.castShadow = true;
-                    tree.add(leaves);
-                    
-                    tree.position.set(x, z, y);
-                    tree.scale.set(
-                        Math.random() * 0.5 + 0.7,
-                        Math.random() * 0.5 + 0.7,
-                        Math.random() * 0.5 + 0.7
-                    );
-                    scene.add(tree);
-                }
-            }
-        }
-        
-        function createSky() {
-            // Cielo con efecto de atmósfera
-            const skyGeometry = new THREE.SphereGeometry(1000, 32, 32);
-            const skyMaterial = new THREE.ShaderMaterial({
-                vertexShader: `
-                    varying vec3 vWorldPosition;
-                    void main() {
-                        vec4 worldPosition = modelMatrix * vec4(position, 1.0);
-                        vWorldPosition = worldPosition.xyz;
-                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-                    }
-                `,
-                fragmentShader: `
-                    uniform vec3 topColor;
-                    uniform vec3 bottomColor;
-                    uniform float offset;
-                    uniform float exponent;
-                    varying vec3 vWorldPosition;
-                    void main() {
-                        float h = normalize(vWorldPosition + offset).y;
-                        gl_FragColor = vec4(mix(bottomColor, topColor, max(pow(max(h, 0.0), exponent)), 1.0);
-                    }
-                `,
-                uniforms: {
-                    topColor: { value: new THREE.Color(0x0077ff) },
-                    bottomColor: { value: new THREE.Color(0xffffff) },
-                    offset: { value: 33 },
-                    exponent: { value: 0.6 }
-                },
-                side: THREE.BackSide
-            });
+            ghosts[0].x = 9;
+            ghosts[0].y = 9;
+            ghosts[1].x = 10;
+            ghosts[1].y = 9;
+            ghosts[2].x = 9;
+            ghosts[2].y = 10;
+            ghosts[3].x = 10;
+            ghosts[3].y = 10;
             
-            sky = new THREE.Mesh(skyGeometry, skyMaterial);
-            scene.add(sky);
-        }
-        
-        function createPlayer() {
-            // Modelo simplificado del jugador
-            player = new THREE.Group();
-            
-            // Cuerpo
-            const bodyGeometry = new THREE.CylinderGeometry(0.3, 0.3, 1.8, 8);
-            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 });
-            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
-            player.add(body);
-            
-            // Cabeza
-            const headGeometry = new THREE.SphereGeometry(0.25, 16, 16);
-            const headMaterial = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-            const head = new THREE.Mesh(headGeometry, headMaterial);
-            head.position.y = 0.9;
-            player.add(head);
-            
-            player.position.y = getTerrainHeight(0, 0) + 1;
-            scene.add(player);
-        }
-        
-        function setupControls() {
-            // Configurar controles táctiles
-            const joystickLeft = document.getElementById('left-joystick-handle');
-            const joystickRight = document.getElementById('right-joystick-handle');
-            const joystickLeftArea = document.getElementById('joystick-left');
-            const joystickRightArea = document.getElementById('joystick-right');
-            
-            // Joystick izquierdo (movimiento)
-            joystickLeft.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                joystickLeftActive = true;
-                const touch = e.touches[0];
-                const rect = joystickLeftArea.getBoundingClientRect();
-                joystickLeftPos = {
-                    startX: rect.left + rect.width / 2,
-                    startY: rect.top + rect.height / 2,
-                    x: touch.clientX,
-                    y: touch.clientY
+            ghosts.forEach(ghost => {
+                ghost.direction = { 
+                    x: [-1, 0, 1][Math.floor(Math.random() * 3)], 
+                    y: [-1, 0, 1][Math.floor(Math.random() * 3)] 
                 };
-                updateJoystickPosition(joystickLeft, joystickLeftPos);
+                ghost.scared = false;
+            });
+        }
+
+        // Dibujar el laberinto
+        function drawMaze() {
+            const tileSize = config.tileSize;
+            
+            for (let y = 0; y < maze.length; y++) {
+                for (let x = 0; x < maze[y].length; x++) {
+                    const tileX = x * tileSize;
+                    const tileY = y * tileSize;
+                    
+                    if (maze[y][x] === 1) {
+                        ctx.fillStyle = '#00F';
+                        ctx.fillRect(tileX, tileY, tileSize, tileSize);
+                    }
+                }
+            }
+        }
+
+        // Dibujar puntos
+        function drawDots() {
+            const tileSize = config.tileSize;
+            ctx.fillStyle = '#FFF';
+            
+            dots.forEach(dot => {
+                const dotX = dot.x * tileSize;
+                const dotY = dot.y * tileSize;
+                ctx.beginPath();
+                ctx.arc(dotX, dotY, config.dotSize, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            powerPellets.forEach(pellet => {
+                const pelletX = pellet.x * tileSize;
+                const pelletY = pellet.y * tileSize;
+                ctx.beginPath();
+                ctx.arc(pelletX, pelletY, config.powerPelletSize, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Dibujar Pac-Man
+        function drawPacman() {
+            const tileSize = config.tileSize;
+            const x = pacman.x * tileSize;
+            const y = pacman.y * tileSize;
+            
+            ctx.fillStyle = '#FF0';
+            ctx.beginPath();
+            
+            if (pacman.mouthOpen) {
+                ctx.arc(x, y, pacman.radius, 
+                       pacman.mouthAngle, 
+                       Math.PI * 2 - pacman.mouthAngle, 
+                       false);
+            } else {
+                ctx.arc(x, y, pacman.radius, 0, Math.PI * 2);
+            }
+            
+            ctx.lineTo(x, y);
+            ctx.fill();
+            
+            // Ojo
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            
+            let eyeX = x;
+            let eyeY = y - pacman.radius / 2;
+            
+            // Posicionar el ojo según la dirección
+            if (pacman.direction.x === 1) eyeX += pacman.radius / 3;
+            else if (pacman.direction.x === -1) eyeX -= pacman.radius / 3;
+            else if (pacman.direction.y === -1) eyeY -= pacman.radius / 3;
+            else if (pacman.direction.y === 1) eyeY += pacman.radius / 3;
+            
+            ctx.arc(eyeX, eyeY, pacman.radius / 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // Dibujar fantasmas
+        function drawGhosts() {
+            const tileSize = config.tileSize;
+            
+            ghosts.forEach(ghost => {
+                const x = ghost.x * tileSize;
+                const y = ghost.y * tileSize;
+                
+                // Cuerpo
+                ctx.fillStyle = ghost.scared ? '#00F' : ghost.color;
+                ctx.beginPath();
+                ctx.arc(x, y, ghost.radius, Math.PI, 0, false);
+                ctx.lineTo(x + ghost.radius, y + ghost.radius);
+                
+                // Patas
+                for (let i = 0; i < 3; i++) {
+                    ctx.lineTo(x + ghost.radius - (i * ghost.radius / 1.5), y + ghost.radius + 5);
+                    ctx.lineTo(x + ghost.radius - ((i + 0.5) * ghost.radius / 1.5), y + ghost.radius);
+                }
+                
+                ctx.lineTo(x - ghost.radius, y + ghost.radius);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Ojos
+                const eyeOffset = ghost.radius / 3;
+                
+                // Ojo izquierdo
+                ctx.fillStyle = '#FFF';
+                ctx.beginPath();
+                ctx.arc(x - eyeOffset, y - eyeOffset / 2, ghost.radius / 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Ojo derecho
+                ctx.beginPath();
+                ctx.arc(x + eyeOffset, y - eyeOffset / 2, ghost.radius / 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Pupilas
+                ctx.fillStyle = '#00F';
+                let pupilOffset = ghost.radius / 6;
+                
+                // Pupila izquierda
+                let pupilX = x - eyeOffset;
+                let pupilY = y - eyeOffset / 2;
+                
+                if (ghost.direction.x === 1) pupilX += pupilOffset;
+                else if (ghost.direction.x === -1) pupilX -= pupilOffset;
+                else if (ghost.direction.y === -1) pupilY -= pupilOffset;
+                else if (ghost.direction.y === 1) pupilY += pupilOffset;
+                
+                ctx.beginPath();
+                ctx.arc(pupilX, pupilY, ghost.radius / 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Pupila derecha
+                pupilX = x + eyeOffset;
+                
+                if (ghost.direction.x === 1) pupilX += pupilOffset;
+                else if (ghost.direction.x === -1) pupilX -= pupilOffset;
+                else if (ghost.direction.y === -1) pupilY -= pupilOffset;
+                else if (ghost.direction.y === 1) pupilY += pupilOffset;
+                
+                ctx.beginPath();
+                ctx.arc(pupilX, pupilY, ghost.radius / 6, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Movimiento de Pac-Man
+        function movePacman() {
+            // Actualizar ángulo de la boca
+            pacman.mouthAngle += pacman.mouthSpeed;
+            
+            if (pacman.mouthAngle > 0.3 || pacman.mouthAngle < 0) {
+                pacman.mouthSpeed = -pacman.mouthSpeed;
+                pacman.mouthOpen = !pacman.mouthOpen;
+            }
+            
+            // Intentar cambiar de dirección si hay una próxima dirección
+            if (pacman.nextDirection.x !== 0 || pacman.nextDirection.y !== 0) {
+                const nextX = Math.floor(pacman.x + pacman.nextDirection.x);
+                const nextY = Math.floor(pacman.y + pacman.nextDirection.y);
+                
+                if (nextX >= 0 && nextX < maze[0].length && 
+                    nextY >= 0 && nextY < maze.length && 
+                    maze[nextY][nextX] !== 1) {
+                    pacman.direction = { ...pacman.nextDirection };
+                    pacman.nextDirection = { x: 0, y: 0 };
+                }
+            }
+            
+            // Mover Pac-Man
+            const newX = pacman.x + pacman.direction.x * pacman.speed / 10;
+            const newY = pacman.y + pacman.direction.y * pacman.speed / 10;
+            
+            // Verificar colisión con paredes
+            const tileX = Math.floor(newX);
+            const tileY = Math.floor(newY);
+            
+            if (tileX >= 0 && tileX < maze[0].length && 
+                tileY >= 0 && tileY < maze.length && 
+                maze[tileY][tileX] !== 1) {
+                pacman.x = newX;
+                pacman.y = newY;
+            } else {
+                // Ajustar posición para alinearse con la cuadrícula
+                if (pacman.direction.x !== 0) {
+                    pacman.y = Math.round(pacman.y);
+                }
+                if (pacman.direction.y !== 0) {
+                    pacman.x = Math.round(pacman.x);
+                }
+            }
+            
+            // Teletransporte entre túneles
+            if (pacman.x < 0) pacman.x = maze[0].length - 1;
+            else if (pacman.x >= maze[0].length) pacman.x = 0;
+            
+            // Comer puntos
+            const pacmanTileX = Math.floor(pacman.x);
+            const pacmanTileY = Math.floor(pacman.y);
+            
+            // Comer puntos normales
+            dots = dots.filter(dot => {
+                const dotTileX = Math.floor(dot.x);
+                const dotTileY = Math.floor(dot.y);
+                
+                if (dotTileX === pacmanTileX && dotTileY === pacmanTileY) {
+                    score += 10;
+                    scoreElement.textContent = score;
+                    return false;
+                }
+                return true;
+            });
+            
+            // Comer power pellets
+            powerPellets = powerPellets.filter(pellet => {
+                const pelletTileX = Math.floor(pellet.x);
+                const pelletTileY = Math.floor(pellet.y);
+                
+                if (pelletTileX === pacmanTileX && pelletTileY === pacmanTileY) {
+                    score += 50;
+                    scoreElement.textContent = score;
+                    
+                    // Asustar fantasmas
+                    ghosts.forEach(ghost => {
+                        ghost.scared = true;
+                        setTimeout(() => {
+                            ghost.scared = false;
+                        }, config.scaredTime);
+                    });
+                    
+                    return false;
+                }
+                return true;
+            });
+            
+            // Verificar si se completó el nivel
+            if (dots.length === 0 && powerPellets.length === 0) {
+                level++;
+                initLevel();
+            }
+        }
+
+        // Movimiento de fantasmas
+        function moveGhosts() {
+            ghosts.forEach(ghost => {
+                // Movimiento aleatorio simple (en un juego real sería más inteligente)
+                const directions = [
+                    { x: 1, y: 0 }, { x: -1, y: 0 }, 
+                    { x: 0, y: 1 }, { x: 0, y: -1 }
+                ];
+                
+                // Intentar mantener la dirección actual si es posible
+                const currentTileX = Math.floor(ghost.x);
+                const currentTileY = Math.floor(ghost.y);
+                const nextTileX = currentTileX + ghost.direction.x;
+                const nextTileY = currentTileY + ghost.direction.y;
+                
+                let canContinue = false;
+                
+                if (nextTileX >= 0 && nextTileX < maze[0].length && 
+                    nextTileY >= 0 && nextTileY < maze.length && 
+                    maze[nextTileY][nextTileX] !== 1) {
+                    canContinue = true;
+                }
+                
+                if (!canContinue || Math.random() < 0.1) {
+                    // Cambiar dirección
+                    const possibleDirections = directions.filter(dir => {
+                        const newTileX = currentTileX + dir.x;
+                        const newTileY = currentTileY + dir.y;
+                        
+                        // No retroceder a menos que sea necesario
+                        if (dir.x === -ghost.direction.x && dir.y === -ghost.direction.y) {
+                            return false;
+                        }
+                        
+                        return newTileX >= 0 && newTileX < maze[0].length && 
+                               newTileY >= 0 && newTileY < maze.length && 
+                               maze[newTileY][newTileX] !== 1;
+                    });
+                    
+                    if (possibleDirections.length > 0) {
+                        ghost.direction = possibleDirections[Math.floor(Math.random() * possibleDirections.length)];
+                    } else {
+                        // Si no hay opciones, retroceder
+                        ghost.direction = { x: -ghost.direction.x, y: -ghost.direction.y };
+                    }
+                }
+                
+                // Mover fantasma
+                ghost.x += ghost.direction.x * ghost.speed / 10;
+                ghost.y += ghost.direction.y * ghost.speed / 10;
+                
+                // Teletransporte entre túneles
+                if (ghost.x < 0) ghost.x = maze[0].length - 1;
+                else if (ghost.x >= maze[0].length) ghost.x = 0;
+                
+                // Verificar colisión con Pac-Man
+                const distance = Math.sqrt(
+                    Math.pow(ghost.x - pacman.x, 2) + 
+                    Math.pow(ghost.y - pacman.y, 2)
+                );
+                
+                if (distance < (ghost.radius + pacman.radius) / config.tileSize) {
+                    if (ghost.scared) {
+                        // Comer fantasma
+                        ghost.x = 9 + Math.random();
+                        ghost.y = 9 + Math.random();
+                        ghost.scared = false;
+                        score += 200;
+                        scoreElement.textContent = score;
+                    } else {
+                        // Perder vida
+                        lives--;
+                        livesElement.textContent = lives;
+                        
+                        if (lives <= 0) {
+                            gameOver();
+                        } else {
+                            // Resetear posición
+                            pacman.x = 10;
+                            pacman.y = 15;
+                            pacman.direction = { x: 0, y: 0 };
+                            
+                            ghosts.forEach(g => {
+                                g.x = 9 + Math.random();
+                                g.y = 9 + Math.random();
+                            });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Control con joystick táctil
+        function setupJoystick() {
+            joystick.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                joystickActive = true;
+                const rect = joystick.getBoundingClientRect();
+                joystickStartPos = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+                handleJoystickMove(e.touches[0]);
             });
             
             document.addEventListener('touchmove', (e) => {
-                if (joystickLeftActive) {
+                if (joystickActive) {
                     e.preventDefault();
-                    const touch = e.touches[0];
-                    joystickLeftPos.x = touch.clientX;
-                    joystickLeftPos.y = touch.clientY;
-                    updateJoystickPosition(joystickLeft, joystickLeftPos);
-                }
-                
-                if (joystickRightActive) {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    joystickRightPos.x = touch.clientX;
-                    joystickRightPos.y = touch.clientY;
-                    updateJoystickPosition(joystickRight, joystickRightPos);
+                    handleJoystickMove(e.touches[0]);
                 }
             });
             
-            document.addEventListener('touchend', (e) => {
-                if (joystickLeftActive) {
-                    joystickLeftActive = false;
-                    joystickLeft.style.transform = 'translate(0, 0)';
-                    joystickLeftPos = { x: 0, y: 0 };
-                }
-                
-                if (joystickRightActive) {
-                    joystickRightActive = false;
-                    joystickRight.style.transform = 'translate(0, 0)';
-                    joystickRightPos = { x: 0, y: 0 };
-                }
-            });
-            
-            // Joystick derecho (cámara)
-            joystickRight.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                joystickRightActive = true;
-                const touch = e.touches[0];
-                const rect = joystickRightArea.getBoundingClientRect();
-                joystickRightPos = {
-                    startX: rect.left + rect.width / 2,
-                    startY: rect.top + rect.height / 2,
-                    x: touch.clientX,
-                    y: touch.clientY
-                };
-                updateJoystickPosition(joystickRight, joystickRightPos);
-            });
-            
-            // Botón de inicio
-            document.getElementById('start-btn').addEventListener('click', startGame);
-            
-            // Redimensionamiento
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-            
-            // Selección de inventario
-            const inventoryItems = document.querySelectorAll('.inventory-item');
-            inventoryItems.forEach((item, index) => {
-                item.addEventListener('click', () => {
-                    inventoryItems.forEach(i => i.classList.remove('active-item'));
-                    item.classList.add('active-item');
-                    playerStats.currentItem = index;
-                });
+            document.addEventListener('touchend', () => {
+                joystickActive = false;
+                joystickDirection = { x: 0, y: 0 };
+                joystickHandle.style.transform = 'translate(0, 0)';
             });
         }
         
-        function updateJoystickPosition(joystick, pos) {
-            const deltaX = pos.x - pos.startX;
-            const deltaY = pos.y - pos.startY;
+        function handleJoystickMove(touch) {
+            const deltaX = touch.clientX - joystickStartPos.x;
+            const deltaY = touch.clientY - joystickStartPos.y;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            const maxDistance = 30;
+            const maxDistance = 40;
             
             if (distance > maxDistance) {
                 const angle = Math.atan2(deltaY, deltaX);
@@ -591,143 +621,88 @@
                 deltaY = Math.sin(angle) * maxDistance;
             }
             
-            joystick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-        }
-        
-        function getTerrainHeight(x, y) {
-            const simplex = new SimplexNoise();
-            const distance = Math.sqrt(x*x + y*y);
-            return simplex.noise2D(x * 0.005, y * 0.005) * 50 + 
-                   simplex.noise2D(x * 0.01, y * 0.01) * 30 +
-                   Math.max(0, 200 - distance * 0.2);
-        }
-        
-        function updateTime() {
-            playerStats.time = (playerStats.time + 0.5) % 24;
-            document.getElementById('time').textContent = 
-                Math.floor(playerStats.time) + ':' + (playerStats.time % 1 === 0 ? '00' : '30');
+            // Mover el handle del joystick
+            joystickHandle.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
             
-            // Actualizar iluminación según la hora
-            const hourRatio = playerStats.time / 24;
-            sun.intensity = Math.max(0.1, Math.sin(hourRatio * Math.PI) * 1.5);
+            // Determinar dirección
+            const deadZone = 10;
+            if (distance < deadZone) {
+                joystickDirection = { x: 0, y: 0 };
+                return;
+            }
             
-            // Cambiar color de la luz según la hora
-            if (playerStats.time > 6 && playerStats.time < 18) {
-                // Día
-                sun.color.setHSL(0.1, 0.8, 0.8);
-                scene.fog.color.setHSL(0.6, 0.6, 0.8);
+            // Normalizar la dirección
+            const angle = Math.atan2(deltaY, deltaX);
+            const angleDeg = angle * 180 / Math.PI;
+            
+            // Determinar dirección principal (arriba, abajo, izquierda, derecha)
+            if (angleDeg > -45 && angleDeg <= 45) {
+                joystickDirection = { x: 1, y: 0 }; // Derecha
+            } else if (angleDeg > 45 && angleDeg <= 135) {
+                joystickDirection = { x: 0, y: 1 }; // Abajo
+            } else if (angleDeg > 135 || angleDeg <= -135) {
+                joystickDirection = { x: -1, y: 0 }; // Izquierda
             } else {
-                // Noche/amanecer/atardecer
-                const isSunset = (playerStats.time > 17 && playerStats.time < 19) || 
-                                (playerStats.time > 5 && playerStats.time < 7);
-                
-                if (isSunset) {
-                    sun.color.setHSL(0.05, 0.9, 0.6);
-                    scene.fog.color.setHSL(0.05, 0.7, 0.6);
-                } else {
-                    sun.color.setHSL(0.7, 0.8, 0.3);
-                    scene.fog.color.setHSL(0.7, 0.6, 0.2);
-                }
+                joystickDirection = { x: 0, y: -1 }; // Arriba
             }
             
-            // Actualizar temperatura ambiental
-            updateTemperature();
+            // Establecer la próxima dirección de Pac-Man
+            pacman.nextDirection = { ...joystickDirection };
         }
-        
-        function updateTemperature() {
-            const baseTemp = 15;
-            const altitudeFactor = playerStats.altitude / 1000 * -6.5;
-            const timeFactor = Math.cos((playerStats.time - 12) / 12 * Math.PI) * 10;
+
+        // Bucle del juego
+        function gameLoop() {
+            if (!gameRunning) return;
             
-            playerStats.temperature = baseTemp + altitudeFactor + timeFactor;
-            document.getElementById('temp').textContent = Math.round(playerStats.temperature) + '°C';
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Efectos en el jugador por temperatura
-            if (playerStats.temperature < 0) {
-                playerStats.health = Math.max(0, playerStats.health - 0.1);
-                updateHealthBar();
-            }
+            // Mover personajes
+            movePacman();
+            moveGhosts();
+            
+            // Dibujar elementos
+            drawMaze();
+            drawDots();
+            drawGhosts();
+            drawPacman();
+            
+            // Continuar el bucle
+            requestAnimationFrame(gameLoop);
         }
-        
-        function updateHealthBar() {
-            const healthFill = document.getElementById('health-fill');
-            healthFill.style.width = playerStats.health + '%';
-            
-            if (playerStats.health < 30) {
-                healthFill.style.background = '#ff0000';
-            } else if (playerStats.health < 60) {
-                healthFill.style.background = '#ff9900';
-            } else {
-                healthFill.style.background = 'linear-gradient(to right, #ff0000, #00ff00)';
-            }
-        }
-        
+
+        // Iniciar juego
         function startGame() {
-            document.getElementById('start-screen').style.display = 'none';
-            animate();
+            score = 0;
+            lives = 3;
+            level = 1;
+            
+            scoreElement.textContent = score;
+            livesElement.textContent = lives;
+            
+            initLevel();
+            startScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
+            gameRunning = true;
+            
+            gameLoop();
         }
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            const delta = clock.getDelta();
-            
-            // Movimiento del jugador
-            if (joystickLeftActive) {
-                const deltaX = joystickLeftPos.x - joystickLeftPos.startX;
-                const deltaY = joystickLeftPos.y - joystickLeftPos.startY;
-                
-                // Movimiento hacia adelante/atrás
-                const moveSpeed = delta * 5;
-                const moveX = -deltaY / 30 * moveSpeed;
-                
-                // Rotación del jugador
-                player.rotation.y -= deltaX * 0.01;
-                
-                // Mover al jugador
-                const newX = player.position.x + Math.sin(player.rotation.y) * moveX;
-                const newZ = player.position.z + Math.cos(player.rotation.y) * moveX;
-                const newY = getTerrainHeight(newX, newZ) + 1;
-                
-                player.position.set(newX, newY, newZ);
-                
-                // Actualizar altitud
-                playerStats.altitude = Math.round(newY);
-                document.getElementById('altitude').textContent = playerStats.altitude.toLocaleString();
-                
-                // Actualizar distancia a la cima
-                const distanceToPeak = Math.max(0, 850 - (playerStats.altitude - 1200));
-                document.getElementById('distance').textContent = distanceToPeak;
-                
-                // Consumir energía
-                playerStats.stamina = Math.max(0, playerStats.stamina - delta * 0.5);
-            }
-            
-            // Rotación de la cámara
-            if (joystickRightActive) {
-                const deltaX = joystickRightPos.x - joystickRightPos.startX;
-                camera.rotation.y -= deltaX * 0.01;
-            }
-            
-            // Posicionar cámara detrás del jugador
-            camera.position.x = player.position.x;
-            camera.position.y = player.position.y + 1.6;
-            camera.position.z = player.position.z;
-            
-            // Rotar cámara para mirar hacia adelante
-            camera.rotation.y = player.rotation.y;
-            
-            // Actualizar posición del sol
-            const timeRatio = playerStats.time / 24 * Math.PI * 2;
-            sun.position.x = Math.cos(timeRatio) * 500;
-            sun.position.y = Math.sin(timeRatio) * 500 + 200;
-            sun.position.z = Math.sin(timeRatio * 0.7) * 500;
-            
-            renderer.render(scene, camera);
+
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            finalScoreElement.textContent = score;
+            gameOverScreen.style.display = 'flex';
         }
-        
-        // Inicializar el juego
-        init();
+
+        // Event listeners
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', startGame);
+
+        // Inicialización
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        setupJoystick();
     </script>
 </body>
 </html>
