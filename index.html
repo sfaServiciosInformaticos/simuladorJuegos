@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Rally Funcional</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: Arial, sans-serif;
+        }
+        #container { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+        }
+        #start-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="hud">
+        <div>Velocidad: <span id="speed">0</span> km/h</div>
+        <div>Dirección: <span id="steering">0</span>°</div>
+        <div>Estado: <span id="status">En pista</span></div>
+    </div>
+    
+    <div id="controls">
+        <h3>Controles:</h3>
+        <p>Flecha ↑: Acelerar</p>
+        <p>Flecha ↓: Frenar</p>
+        <p>Flechas ←/→: Girar</p>
+        <p>Espacio: Derrapar</p>
+        <p>R: Reiniciar</p>
+    </div>
+    
+    <div id="start-screen">
+        <h1>Simulador de Rally</h1>
+        <p>Controla el auto con las flechas del teclado</p>
+        <button id="start-btn">Comenzar</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // Variables principales
+        let scene, camera, renderer, car, road;
+        let clock = new THREE.Clock();
+        let keys = {};
+        let physics = {
+            speed: 0,
+            maxSpeed: 120,
+            acceleration: 0,
+            steering: 0,
+            rotation: 0,
+            drift: false
+        };
+        
+        // Inicialización
+        function init() {
+            // Crear escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            
+            // Configurar cámara
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 5, -10);
+            
+            // Configurar renderizador
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // Añadir luces
+            addLights();
+            
+            // Crear terreno
+            createTrack();
+            
+            // Crear auto
+            createCar();
+            
+            // Configurar controles
+            setupControls();
+            
+            // Mostrar pantalla inicial
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+        
+        function addLights() {
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+        }
+        
+        function createTrack() {
+            // Crear pista principal
+            const trackGeometry = new THREE.PlaneGeometry(200, 20, 50, 10);
+            const trackMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                side: THREE.DoubleSide
+            });
+            
+            road = new THREE.Mesh(trackGeometry, trackMaterial);
+            road.rotation.x = -Math.PI / 2;
+            road.position.y = -1;
+            scene.add(road);
+            
+            // Añadir bordes de hierba
+            const grassGeometry = new THREE.PlaneGeometry(200, 30, 50, 10);
+            const grassMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x3a5f0b,
+                side: THREE.DoubleSide
+            });
+            
+            const leftGrass = new THREE.Mesh(grassGeometry, grassMaterial);
+            leftGrass.rotation.x = -Math.PI / 2;
+            leftGrass.position.set(0, -1.05, -25);
+            scene.add(leftGrass);
+            
+            const rightGrass = new THREE.Mesh(grassGeometry, grassMaterial);
+            rightGrass.rotation.x = -Math.PI / 2;
+            rightGrass.position.set(0, -1.05, 25);
+            scene.add(rightGrass);
+        }
+        
+        function createCar() {
+            // Carrocería
+            const bodyGeometry = new THREE.BoxGeometry(2, 1, 4);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            
+            // Ruedas
+            const wheelGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.4, 16);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            
+            const wheelFL = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelFL.rotation.z = Math.PI/2;
+            wheelFL.position.set(-1.2, -0.5, 1.5);
+            
+            const wheelFR = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelFR.rotation.z = Math.PI/2;
+            wheelFR.position.set(1.2, -0.5, 1.5);
+            
+            const wheelRL = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelRL.rotation.z = Math.PI/2;
+            wheelRL.position.set(-1.2, -0.5, -1.5);
+            
+            const wheelRR = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelRR.rotation.z = Math.PI/2;
+            wheelRR.position.set(1.2, -0.5, -1.5);
+            
+            // Crear grupo del auto
+            car = new THREE.Group();
+            car.add(body);
+            car.add(wheelFL);
+            car.add(wheelFR);
+            car.add(wheelRL);
+            car.add(wheelRR);
+            
+            // Guardar referencias a las ruedas
+            car.wheels = {
+                frontLeft: wheelFL,
+                frontRight: wheelFR,
+                rearLeft: wheelRL,
+                rearRight: wheelRR
+            };
+            
+            scene.add(car);
+        }
+        
+        function setupControls() {
+            // Eventos de teclado
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'ArrowUp') keys.up = true;
+                if (e.code === 'ArrowDown') keys.down = true;
+                if (e.code === 'ArrowLeft') keys.left = true;
+                if (e.code === 'ArrowRight') keys.right = true;
+                if (e.code === 'Space') keys.space = true;
+                if (e.key.toLowerCase() === 'r') resetCar();
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'ArrowUp') keys.up = false;
+                if (e.code === 'ArrowDown') keys.down = false;
+                if (e.code === 'ArrowLeft') keys.left = false;
+                if (e.code === 'ArrowRight') keys.right = false;
+                if (e.code === 'Space') keys.space = false;
+            });
+            
+            // Botón de inicio
+            document.getElementById('start-btn').addEventListener('click', startGame);
+            
+            // Redimensionamiento
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            animate();
+        }
+        
+        function updatePhysics(delta) {
+            // Aceleración
+            if (keys.up) {
+                physics.acceleration = 0.1;
+            } else if (keys.down) {
+                physics.acceleration = -0.2;
+            } else {
+                physics.acceleration = -physics.speed * 0.05;
+            }
+            
+            // Actualizar velocidad
+            physics.speed += physics.acceleration * delta * 60;
+            physics.speed = Math.max(-30, Math.min(physics.speed, physics.maxSpeed));
+            
+            // Dirección
+            if (keys.left) {
+                physics.steering = 0.05 * Math.min(1, physics.speed/30);
+            } else if (keys.right) {
+                physics.steering = -0.05 * Math.min(1, physics.speed/30);
+            } else {
+                physics.steering *= 0.9;
+            }
+            
+            // Derrape
+            if (keys.space && Math.abs(physics.speed) > 10) {
+                physics.rotation += physics.steering * 2;
+                physics.drift = true;
+            } else {
+                physics.drift = false;
+            }
+            
+            // Rotación del auto
+            physics.rotation += physics.steering * physics.speed * delta;
+            
+            // Mover auto
+            car.position.x += Math.sin(physics.rotation) * physics.speed * delta;
+            car.position.z += Math.cos(physics.rotation) * physics.speed * delta;
+            
+            // Rotar auto
+            car.rotation.y = physics.rotation;
+            
+            // Rotar ruedas delanteras
+            if (Math.abs(physics.speed) > 5) {
+                const wheelAngle = physics.steering * 20;
+                car.wheels.frontLeft.rotation.y = wheelAngle;
+                car.wheels.frontRight.rotation.y = wheelAngle;
+            }
+            
+            // Rotar todas las ruedas
+            const wheelSpeed = physics.speed * 2;
+            car.wheels.frontLeft.rotation.x += wheelSpeed * delta;
+            car.wheels.frontRight.rotation.x += wheelSpeed * delta;
+            car.wheels.rearLeft.rotation.x += wheelSpeed * delta;
+            car.wheels.rearRight.rotation.x += wheelSpeed * delta;
+            
+            // Actualizar cámara
+            updateCamera();
+            
+            // Actualizar HUD
+            updateHUD();
+        }
+        
+        function updateCamera() {
+            const cameraDistance = 10;
+            const cameraHeight = 5;
+            
+            camera.position.x = car.position.x - Math.sin(physics.rotation) * cameraDistance;
+            camera.position.z = car.position.z - Math.cos(physics.rotation) * cameraDistance;
+            camera.position.y = car.position.y + cameraHeight;
+            
+            camera.lookAt(car.position);
+        }
+        
+        function updateHUD() {
+            document.getElementById('speed').textContent = Math.abs(Math.round(physics.speed * 3.6));
+            document.getElementById('steering').textContent = Math.round(physics.steering * 100);
+            document.getElementById('status').textContent = physics.drift ? "Derrapando!" : "En pista";
+        }
+        
+        function resetCar() {
+            car.position.set(0, 0, 0);
+            car.rotation.set(0, 0, 0);
+            physics.speed = 0;
+            physics.rotation = 0;
+            physics.steering = 0;
+            
+            // Resetear ruedas
+            car.wheels.frontLeft.rotation.set(0, 0, Math.PI/2);
+            car.wheels.frontRight.rotation.set(0, 0, Math.PI/2);
+            car.wheels.rearLeft.rotation.set(0, 0, Math.PI/2);
+            car.wheels.rearRight.rotation.set(0, 0, Math.PI/2);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            updatePhysics(delta);
+            renderer.render(scene, camera);
+        }
+        
+        // Iniciar la aplicación
+        init();
+    </script>
+</body>
+</html>
