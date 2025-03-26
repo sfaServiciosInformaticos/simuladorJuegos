@@ -752,16 +752,26 @@
         }
 
         // Event listeners
-        startBtn.addEventListener('click', startGame);
-        restartBtn.addEventListener('click', startGame);
+        function setupEventListeners() {
+            startBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('click', startGame);
+            
+            // Redimensionamiento
+            window.addEventListener('resize', resizeCanvas);
+            
+            // Forzar redimensionamiento inicial
+            setTimeout(resizeCanvas, 100);
+        }
 
         // Inicialización
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-        setupJoystick();
-        
-        // Forzar redimensionamiento inicial
-        setTimeout(resizeCanvas, 100);
+        function init() {
+            resizeCanvas();
+            setupEventListeners();
+            setupJoystick();
+        }
+
+        // Iniciar la aplicación
+        init();
     </script>
 </body>
 </html>
