@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Simulador Cessna - Móvil</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: Arial, sans-serif;
+            touch-action: none;
+        }
+        #container { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+        }
+        #hud {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            z-index: 10;
+        }
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+            z-index: 10;
+        }
+        #start-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #4CAF50;
+            text-align: center;
+            padding: 0 10px;
+        }
+        
+        /* Controles táctiles */
+        #touch-controls {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40%;
+            display: flex;
+            flex-direction: column;
+            z-index: 5;
+        }
+        #throttle-control {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 150px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        #throttle-knob {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 25px;
+            position: relative;
+            touch-action: none;
+        }
+        #flight-control {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            margin: 0 auto;
+            width: 200px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 100px;
+            z-index: 10;
+        }
+        #flight-joystick {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 30px;
+            position: absolute;
+            top: 70px;
+            left: 70px;
+            touch-action: none;
+        }
+        #reset-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(200, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="hud">
+        <div>Velocidad: <span id="speed">0</span> nudos</div>
+        <div>Altitud: <span id="altitude">0</span> pies</div>
+        <div>Inclinación: <span id="pitch">0</span>°</div>
+        <div>Giro: <span id="heading">0</span>°</div>
+    </div>
+    
+    <div id="controls">
+        <h3>Controles Táctiles:</h3>
+        <p>Área izquierda: Inclinación y giro</p>
+        <p>Control derecho: Potencia del motor</p>
+        <p>Botón R: Reiniciar posición</p>
+    </div>
+    
+    <button id="reset-btn">Reiniciar (R)</button>
+    
+    <!-- Controles táctiles -->
+    <div id="touch-controls">
+        <div id="flight-control">
+            <div id="flight-joystick"></div>
+        </div>
+        <div id="throttle-control">
+            <div id="throttle-knob"></div>
+        </div>
+    </div>
+    
+    <div id="start-screen">
+        <h1>Simulador Cessna para Móvil</h1>
+        <p>Usa los controles táctiles para volar</p>
+        <button id="start-btn">Comenzar Vuelo</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <script>
+        // Variables principales
+        let scene, camera, renderer, cessna;
+        let clock = new THREE.Clock();
+        let physics = {
+            speed: 80,       // nudos
+            maxSpeed: 160,
+            minSpeed: 50,
+            altitude: 2000,  // pies
+            pitch: 0,        // inclinación arriba/abajo (radianes)
+            roll: 0,         // inclinación lateral (radianes)
+            yaw: 0,          // dirección (radianes)
+            throttle: 0.5    // potencia del motor (0-1)
+        };
+        
+        // Variables para controles táctiles
+        let joystickActive = false;
+        let throttleActive = false;
+        let joystickStartPos = { x: 0, y: 0 };
+        let joystickCurrentPos = { x: 0, y: 0 };
+        let throttleStartPos = { y: 0 };
+        let throttleCurrentPos = { y: 0 };
+        
+        // Inicialización
+        function init() {
+            // Crear escena
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87CEEB);
+            
+            // Configurar cámara
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 50000);
+            camera.position.set(0, 5, -15);
+            
+            // Configurar renderizador
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // Añadir luces
+            addLights();
+            
+            // Crear terreno y cielo
+            createEnvironment();
+            
+            // Crear modelo Cessna detallado
+            createCessna();
+            
+            // Configurar controles
+            setupControls();
+            
+            // Mostrar pantalla inicial
+            document.getElementById('start-screen').style.display = 'flex';
+        }
+        
+        function addLights() {
+            // Luz ambiental
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            // Luz direccional (sol)
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Luz hemisférica
+            const hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 0.2);
+            scene.add(hemisphereLight);
+        }
+        
+        function createEnvironment() {
+            // Crear terreno base
+            const terrainGeometry = new THREE.PlaneGeometry(10000, 10000, 100, 100);
+            
+            // Añadir variación de altura
+            const positions = terrainGeometry.attributes.position;
+            for (let i = 0; i < positions.count; i++) {
+                const x = positions.getX(i);
+                const y = positions.getY(i);
+                positions.setZ(i, Math.sin(x * 0.002) * 200 + Math.cos(y * 0.002) * 200);
+            }
+            
+            terrainGeometry.computeVertexNormals();
+            
+            const terrainMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x3a5f0b,
+                side: THREE.DoubleSide,
+                flatShading: true
+            });
+            
+            const terrain = new THREE.Mesh(terrainGeometry, terrainMaterial);
+            terrain.rotation.x = -Math.PI / 2;
+            terrain.receiveShadow = true;
+            scene.add(terrain);
+            
+            // Añadir cielo
+            const skyGeometry = new THREE.SphereGeometry(5000, 32, 32);
+            const skyMaterial = new THREE.MeshBasicMaterial({ 
+                color: 0x87CEEB,
+                side: THREE.BackSide
+            });
+            const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+            scene.add(sky);
+        }
+        
+        function createCessna() {
+            // Grupo principal para el Cessna
+            cessna = new THREE.Group();
+            
+            // Fuselaje (cuerpo principal)
+            const bodyGeometry = new THREE.CylinderGeometry(0.8, 0.5, 6, 8);
+            const bodyMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                metalness: 0.3,
+                roughness: 0.7
+            });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            body.rotation.z = Math.PI / 2;
+            cessna.add(body);
+            
+            // Cabina (vidrio)
+            const cockpitGeometry = new THREE.CylinderGeometry(0.5, 0.4, 1.5, 8);
+            const cockpitMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0x7ec0ee,
+                transparent: true,
+                opacity: 0.7
+            });
+            const cockpit = new THREE.Mesh(cockpitGeometry, cockpitMaterial);
+            cockpit.rotation.z = Math.PI / 2;
+            cockpit.position.set(1.5, 0.2, 0);
+            cessna.add(cockpit);
+            
+            // Ala principal
+            const wingGeometry = new THREE.BoxGeometry(8, 0.1, 1.5);
+            const wingMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+            const wing = new THREE.Mesh(wingGeometry, wingMaterial);
+            wing.position.set(0, 0, 0);
+            cessna.add(wing);
+            
+            // Estabilizador horizontal (cola)
+            const tailGeometry = new THREE.BoxGeometry(3, 0.1, 0.8);
+            const tail = new THREE.Mesh(tailGeometry, wingMaterial);
+            tail.position.set(-3, 0, 0);
+            cessna.add(tail);
+            
+            // Estabilizador vertical (timón de dirección)
+            const rudderGeometry = new THREE.BoxGeometry(0.8, 1.2, 0.1);
+            const rudder = new THREE.Mesh(rudderGeometry, wingMaterial);
+            rudder.position.set(-3.5, 0.5, 0);
+            cessna.add(rudder);
+            
+            // Motor (nariz del avión)
+            const engineGeometry = new THREE.CylinderGeometry(0.6, 0.8, 1, 8);
+            const engineMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const engine = new THREE.Mesh(engineGeometry, engineMaterial);
+            engine.rotation.z = Math.PI / 2;
+            engine.position.set(3.5, 0, 0);
+            cessna.add(engine);
+            
+            // Hélice
+            const propellerGeometry = new THREE.BoxGeometry(0.2, 0.05, 2);
+            const propeller = new THREE.Mesh(propellerGeometry, new THREE.MeshPhongMaterial({ color: 0x888888 }));
+            propeller.position.set(4, 0, 0);
+            cessna.propeller = propeller; // Guardamos referencia para animación
+            cessna.add(propeller);
+            
+            // Ruedas (tren de aterrizaje)
+            const wheelGeometry = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x222222 });
+            
+            // Rueda delantera
+            const frontWheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            frontWheel.rotation.z = Math.PI / 2;
+            frontWheel.position.set(1.5, -0.6, 0);
+            cessna.add(frontWheel);
+            
+            // Ruedas traseras
+            const rearWheelL = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            rearWheelL.rotation.z = Math.PI / 2;
+            rearWheelL.position.set(-1, -0.6, 0.8);
+            cessna.add(rearWheelL);
+            
+            const rearWheelR = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            rearWheelR.rotation.z = Math.PI / 2;
+            rearWheelR.position.set(-1, -0.6, -0.8);
+            cessna.add(rearWheelR);
+            
+            // Posición inicial
+            cessna.position.y = physics.altitude / 3.281; // Convertir pies a metros
+            cessna.scale.set(0.8, 0.8, 0.8);
+            
+            scene.add(cessna);
+        }
+        
+        function setupControls() {
+            // Configurar controles táctiles
+            
+            // Joystick de vuelo
+            const joystick = document.getElementById('flight-joystick');
+            const joystickArea = document.getElementById('flight-control');
+            
+            joystick.addEventListener('touchstart', handleJoystickStart);
+            joystick.addEventListener('touchmove', handleJoystickMove);
+            joystick.addEventListener('touchend', handleJoystickEnd);
+            
+            // Control de potencia
+            const throttle = document.getElementById('throttle-knob');
+            const throttleArea = document.getElementById('throttle-control');
+            
+            throttle.addEventListener('touchstart', handleThrottleStart);
+            throttle.addEventListener('touchmove', handleThrottleMove);
+            throttle.addEventListener('touchend', handleThrottleEnd);
+            
+            // Botón de reinicio
+            document.getElementById('reset-btn').addEventListener('click', resetPlane);
+            
+            // Botón de inicio
+            document.getElementById('start-btn').addEventListener('click', startFlight);
+            
+            // Redimensionamiento
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            // Eventos para el joystick
+            function handleJoystickStart(e) {
+                e.preventDefault();
+                joystickActive = true;
+                const touch = e.touches[0];
+                const rect = joystickArea.getBoundingClientRect();
+                joystickStartPos = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+                handleJoystickMove(e);
+            }
+            
+            function handleJoystickMove(e) {
+                if (!joystickActive) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                joystickCurrentPos = {
+                    x: touch.clientX,
+                    y: touch.clientY
+                };
+                
+                // Calcular posición relativa
+                const deltaX = joystickCurrentPos.x - joystickStartPos.x;
+                const deltaY = joystickCurrentPos.y - joystickStartPos.y;
+                
+                // Limitar el movimiento dentro del área
+                const maxDistance = 70;
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                if (distance > maxDistance) {
+                    const angle = Math.atan2(deltaY, deltaX);
+                    joystickCurrentPos.x = joystickStartPos.x + Math.cos(angle) * maxDistance;
+                    joystickCurrentPos.y = joystickStartPos.y + Math.sin(angle) * maxDistance;
+                }
+                
+                // Actualizar posición visual del joystick
+                joystick.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            }
+            
+            function handleJoystickEnd(e) {
+                joystickActive = false;
+                joystick.style.transform = 'translate(0, 0)';
+                joystickCurrentPos = { x: 0, y: 0 };
+            }
+            
+            // Eventos para el control de potencia
+            function handleThrottleStart(e) {
+                e.preventDefault();
+                throttleActive = true;
+                const touch = e.touches[0];
+                const rect = throttleArea.getBoundingClientRect();
+                throttleStartPos = {
+                    y: touch.clientY
+                };
+                throttleCurrentPos = {
+                    y: touch.clientY
+                };
+            }
+            
+            function handleThrottleMove(e) {
+                if (!throttleActive) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = throttleArea.getBoundingClientRect();
+                
+                // Calcular nueva posición (limitada al área del control)
+                let newY = touch.clientY;
+                const minY = rect.top + 10;
+                const maxY = rect.bottom - 60;
+                
+                newY = Math.max(minY, Math.min(newY, maxY));
+                throttleCurrentPos.y = newY;
+                
+                // Actualizar posición visual
+                const knobPos = newY - rect.top - 25;
+                throttle.style.transform = `translateY(${knobPos}px)`;
+            }
+            
+            function handleThrottleEnd(e) {
+                throttleActive = false;
+            }
+        }
+        
+        function startFlight() {
+            document.getElementById('start-screen').style.display = 'none';
+            animate();
+        }
+        
+        function updatePhysics(delta) {
+            // CONTROL DE POTENCIA (motor) - desde el control táctil
+            if (throttleActive) {
+                const rect = document.getElementById('throttle-control').getBoundingClientRect();
+                const minY = rect.top + 10;
+                const maxY = rect.bottom - 60;
+                const range = maxY - minY;
+                const pos = throttleCurrentPos.y - minY;
+                
+                // Mapear posición a valor de throttle (0-1)
+                physics.throttle = 1 - (pos / range);
+            }
+            
+            // ACTUALIZAR VELOCIDAD BASADA EN POTENCIA
+            physics.speed = physics.minSpeed + (physics.maxSpeed - physics.minSpeed) * physics.throttle;
+            
+            // CONTROL DE VUELO - desde el joystick táctil
+            if (joystickActive) {
+                const maxDistance = 70;
+                const deltaX = joystickCurrentPos.x - joystickStartPos.x;
+                const deltaY = joystickCurrentPos.y - joystickStartPos.y;
+                
+                // Mapear movimiento del joystick a controles de vuelo
+                // deltaX controla el giro (yaw)
+                physics.yaw -= deltaX / (maxDistance * 10);
+                
+                // deltaY controla la inclinación (pitch)
+                physics.pitch -= deltaY / (maxDistance * 10);
+                
+                // Añadir inclinación lateral al girar (roll)
+                physics.roll = -deltaX / (maxDistance * 5);
+            } else {
+                // Auto-nivelado suave cuando no hay input
+                physics.pitch *= 0.95;
+                physics.yaw *= 0.95;
+                physics.roll *= 0.95;
+            }
+            
+            // Limitar ángulos para vuelo estable
+            physics.pitch = Math.max(-0.3, Math.min(physics.pitch, 0.3));
+            physics.roll = Math.max(-0.5, Math.min(physics.roll, 0.5));
+            
+            // MOVIMIENTO DEL AVIÓN
+            const forwardVector = new THREE.Vector3(
+                Math.sin(physics.yaw) * physics.speed * delta * 0.1,
+                Math.sin(physics.pitch) * physics.speed * delta * 0.1,
+                Math.cos(physics.yaw) * physics.speed * delta * 0.1
+            );
+            
+            cessna.position.add(forwardVector);
+            physics.altitude = cessna.position.y * 3.281; // Convertir metros a pies
+            
+            // ROTACIÓN DEL AVIÓN
+            cessna.rotation.set(physics.pitch, physics.yaw, physics.roll);
+            
+            // ANIMACIÓN DE HÉLICE
+            if (cessna.propeller) {
+                cessna.propeller.rotation.x += physics.throttle * 0.5;
+            }
+            
+            // GRAVEDAD y AERODINÁMICA
+            const lift = physics.speed * 0.01; // Sustentación proporcional a velocidad
+            const gravity = 0.098 - lift;     // Gravedad compensada por sustentación
+            
+            cessna.position.y -= gravity * delta * 10;
+            physics.altitude = cessna.position.y * 3.281;
+            
+            // DETECTAR COLISIÓN CON EL SUELO
+            checkCollision();
+            
+            // ACTUALIZAR CÁMARA
+            updateCamera();
+            
+            // ACTUALIZAR HUD
+            updateHUD();
+        }
+        
+        function checkCollision() {
+            if (physics.altitude <= 0) {
+                physics.altitude = 0;
+                cessna.position.y = 0;
+                physics.speed = Math.max(0, physics.speed - 1);
+            }
+        }
+        
+        function updateCamera() {
+            // Cámara en tercera persona que sigue al avión
+            const cameraDistance = 15;
+            const cameraHeight = 5;
+            
+            // Posición de la cámara detrás y arriba del avión
+            camera.position.x = cessna.position.x - Math.sin(cessna.rotation.y) * cameraDistance;
+            camera.position.z = cessna.position.z - Math.cos(cessna.rotation.y) * cameraDistance;
+            camera.position.y = cessna.position.y + cameraHeight;
+            
+            // La cámara mira ligeramente adelante del avión para mejor visibilidad
+            const lookAtPos = new THREE.Vector3(
+                cessna.position.x + Math.sin(cessna.rotation.y) * 10,
+                cessna.position.y,
+                cessna.position.z + Math.cos(cessna.rotation.y) * 10
+            );
+            
+            camera.lookAt(lookAtPos);
+        }
+        
+        function updateHUD() {
+            document.getElementById('speed').textContent = Math.round(physics.speed);
+            document.getElementById('altitude').textContent = Math.round(physics.altitude);
+            document.getElementById('pitch').textContent = Math.round(cessna.rotation.x * (180/Math.PI));
+            document.getElementById('heading').textContent = Math.round(cessna.rotation.y * (180/Math.PI)) % 360;
+        }
+        
+        function resetPlane() {
+            cessna.position.set(0, 2000 / 3.281, 0); // 2000 pies en metros
+            cessna.rotation.set(0, 0, 0);
+            physics.speed = 80;
+            physics.altitude = 2000;
+            physics.pitch = 0;
+            physics.roll = 0;
+            physics.yaw = 0;
+            physics.throttle = 0.5;
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const delta = clock.getDelta();
+            updatePhysics(delta);
+            renderer.render(scene, camera);
+        }
+        
+        // Iniciar la aplicación
+        init();
+    </script>
+</body>
+</html>
