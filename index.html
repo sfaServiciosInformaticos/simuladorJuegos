@@ -55,8 +55,7 @@
         #joystick-container {
             position: absolute;
             bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
+            left: 30px; /* Cambiado de center a izquierda */
             width: 120px;
             height: 120px;
             z-index: 5;
@@ -218,10 +217,10 @@
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ];
 
-        // Personajes
+        // Personajes con posiciones centradas en las celdas
         const pacman = {
-            x: 10,
-            y: 15,
+            x: 10.5,
+            y: 15.5,
             radius: config.tileSize / 2 - 2,
             speed: config.pacmanSpeed,
             direction: { x: 0, y: 0 },
@@ -232,10 +231,10 @@
         };
 
         const ghosts = [
-            { x: 9, y: 9, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#F00', direction: { x: 1, y: 0 }, scared: false },
-            { x: 10, y: 9, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#0FF', direction: { x: -1, y: 0 }, scared: false },
-            { x: 9, y: 10, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#FF0', direction: { x: 0, y: 1 }, scared: false },
-            { x: 10, y: 10, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#F0F', direction: { x: 0, y: -1 }, scared: false }
+            { x: 9.5, y: 9.5, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#F00', direction: { x: 1, y: 0 }, scared: false },
+            { x: 10.5, y: 9.5, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#0FF', direction: { x: -1, y: 0 }, scared: false },
+            { x: 9.5, y: 10.5, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#FF0', direction: { x: 0, y: 1 }, scared: false },
+            { x: 10.5, y: 10.5, radius: config.tileSize / 2 - 2, speed: config.ghostSpeed, color: '#F0F', direction: { x: 0, y: -1 }, scared: false }
         ];
 
         // Puntos y power pellets
@@ -256,20 +255,20 @@
                 }
             }
             
-            // Resetear posiciones
-            pacman.x = 10;
-            pacman.y = 15;
+            // Resetear posiciones (centradas en celdas)
+            pacman.x = 10.5;
+            pacman.y = 15.5;
             pacman.direction = { x: 0, y: 0 };
             pacman.nextDirection = { x: 0, y: 0 };
             
-            ghosts[0].x = 9;
-            ghosts[0].y = 9;
-            ghosts[1].x = 10;
-            ghosts[1].y = 9;
-            ghosts[2].x = 9;
-            ghosts[2].y = 10;
-            ghosts[3].x = 10;
-            ghosts[3].y = 10;
+            ghosts[0].x = 9.5;
+            ghosts[0].y = 9.5;
+            ghosts[1].x = 10.5;
+            ghosts[1].y = 9.5;
+            ghosts[2].x = 9.5;
+            ghosts[2].y = 10.5;
+            ghosts[3].x = 10.5;
+            ghosts[3].y = 10.5;
             
             ghosts.forEach(ghost => {
                 ghost.direction = { 
@@ -586,8 +585,8 @@
                 if (distance < (ghost.radius + pacman.radius) / config.tileSize) {
                     if (ghost.scared) {
                         // Comer fantasma
-                        ghost.x = 9 + Math.random();
-                        ghost.y = 9 + Math.random();
+                        ghost.x = 9.5;
+                        ghost.y = 9.5;
                         ghost.scared = false;
                         score += 200;
                         scoreElement.textContent = score;
@@ -600,14 +599,18 @@
                             gameOver();
                         } else {
                             // Resetear posición
-                            pacman.x = 10;
-                            pacman.y = 15;
+                            pacman.x = 10.5;
+                            pacman.y = 15.5;
                             pacman.direction = { x: 0, y: 0 };
                             
-                            ghosts.forEach(g => {
-                                g.x = 9 + Math.random();
-                                g.y = 9 + Math.random();
-                            });
+                            ghosts[0].x = 9.5;
+                            ghosts[0].y = 9.5;
+                            ghosts[1].x = 10.5;
+                            ghosts[1].y = 9.5;
+                            ghosts[2].x = 9.5;
+                            ghosts[2].y = 10.5;
+                            ghosts[3].x = 10.5;
+                            ghosts[3].y = 10.5;
                         }
                     }
                 }
