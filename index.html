@@ -17,7 +17,7 @@
             width: 100%;
             height: 100%;
             background-color: #000;
-            touch-action: none;
+            touch-action: manipulation;
             font-family: Arial, sans-serif;
         }
         #game-container {
@@ -114,6 +114,7 @@
             cursor: pointer;
             font-weight: bold;
             pointer-events: auto;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -665,8 +666,8 @@
         }
         
         function updateJoystickPosition(touch) {
-            const deltaX = touch.clientX - joystickStartPos.x;
-            const deltaY = touch.clientY - joystickStartPos.y;
+            let deltaX = touch.clientX - joystickStartPos.x;
+            let deltaY = touch.clientY - joystickStartPos.y;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
             const maxDistance = 40;
             
@@ -753,8 +754,18 @@
 
         // Event listeners
         function setupEventListeners() {
+            // Eventos para clic (escritorio) y touch (móvil)
             startBtn.addEventListener('click', startGame);
+            startBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                startGame();
+            }, { passive: false });
+            
             restartBtn.addEventListener('click', startGame);
+            restartBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                startGame();
+            }, { passive: false });
             
             // Redimensionamiento
             window.addEventListener('resize', resizeCanvas);
