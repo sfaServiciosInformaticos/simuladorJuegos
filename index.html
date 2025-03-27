@@ -55,7 +55,7 @@
         #joystick-container {
             position: absolute;
             bottom: 30px;
-            left: 30px; /* Cambiado de center a izquierda */
+            left: 30px;
             width: 120px;
             height: 120px;
             z-index: 5;
@@ -148,11 +148,13 @@
         // Configuración del juego
         const config = {
             tileSize: 20,
-            pacmanSpeed: 3,
-            ghostSpeed: 2,
+            pacmanSpeed: 1.5, // Reducida de 3 a 1.5 para movimiento más lento
+            ghostSpeed: 1.5,   // También reducida para mantener proporción
             dotSize: 4,
             powerPelletSize: 8,
-            scaredTime: 10000 // 10 segundos
+            scaredTime: 10000, // 10 segundos
+            joystickDeadZone: 5, // Zona muerta reducida para mayor sensibilidad
+            joystickMaxDistance: 30 // Distancia máxima reducida
         };
 
         // Elementos del DOM
@@ -448,9 +450,9 @@
                 }
             }
             
-            // Mover Pac-Man
-            const newX = pacman.x + pacman.direction.x * pacman.speed / 10;
-            const newY = pacman.y + pacman.direction.y * pacman.speed / 10;
+            // Mover Pac-Man más lentamente (dividimos por 20 en lugar de 10)
+            const newX = pacman.x + pacman.direction.x * pacman.speed / 20;
+            const newY = pacman.y + pacman.direction.y * pacman.speed / 20;
             
             // Verificar colisión con paredes
             const tileX = Math.floor(newX);
@@ -568,9 +570,9 @@
                     }
                 }
                 
-                // Mover fantasma
-                ghost.x += ghost.direction.x * ghost.speed / 10;
-                ghost.y += ghost.direction.y * ghost.speed / 10;
+                // Mover fantasma más lentamente (dividimos por 20 en lugar de 10)
+                ghost.x += ghost.direction.x * ghost.speed / 20;
+                ghost.y += ghost.direction.y * ghost.speed / 20;
                 
                 // Teletransporte entre túneles
                 if (ghost.x < 0) ghost.x = maze[0].length - 1;
@@ -617,7 +619,7 @@
             });
         }
 
-        // Control con joystick táctil
+        // Control con joystick táctil más sensible
         function setupJoystick() {
             const handleTouchStart = (e) => {
                 e.preventDefault();
@@ -672,7 +674,7 @@
             let deltaX = touch.clientX - joystickStartPos.x;
             let deltaY = touch.clientY - joystickStartPos.y;
             const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-            const maxDistance = 40;
+            const maxDistance = config.joystickMaxDistance; // Usamos la configuración
             
             if (distance > maxDistance) {
                 const angle = Math.atan2(deltaY, deltaX);
@@ -683,8 +685,8 @@
             // Mover el handle del joystick
             joystickHandle.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
             
-            // Determinar dirección
-            const deadZone = 10;
+            // Determinar dirección con zona muerta más pequeña
+            const deadZone = config.joystickDeadZone;
             if (distance < deadZone) {
                 joystickDirection = { x: 0, y: 0 };
                 pacman.nextDirection = { x: 0, y: 0 };
